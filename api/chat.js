@@ -1,5 +1,14 @@
 export default async function handler(req, res) {
-    // Only allow POST requests
+    // Allow your GitHub Pages domain to talk to this Vercel function
+    res.setHeader('Access-Control-Allow-Origin', 'https://saifkhan2007.github.io');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    // Handle browser preflight OPTIONS request
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -7,7 +16,6 @@ export default async function handler(req, res) {
     try {
         const { messages } = req.body;
 
-        // Call DeepSeek API securely using the environment variable
         const response = await fetch('https://api.deepseek.com/chat/completions', {
             method: 'POST',
             headers: {
@@ -15,7 +23,7 @@ export default async function handler(req, res) {
                 'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
             },
             body: JSON.stringify({
-                model: "deepseek-chat", // DeepSeek Pro model
+                model: "deepseek-chat",
                 messages: messages,
                 stream: false
             })
@@ -27,8 +35,6 @@ export default async function handler(req, res) {
         }
 
         const data = await response.json();
-        
-        // Return the DeepSeek response back to your frontend HTML
         return res.status(200).json(data);
     } catch (error) {
         console.error(error);
